@@ -38,8 +38,8 @@ class _MyHomePageState extends State<MyHomePage>
     with SingleTickerProviderStateMixin {
   late final AnimationController slideController;
   late Animation<Offset> slideAnimation;
-  bool isAnimating = false, isInitial = true;
-  List<int> allNumbers = List.generate(30, (index) => index + 1),
+  bool isAnimating = false, isInitial = true, red = true;
+  List<int> allNumbers = List.generate(20, (index) => index + 1),
       animationNumbers = List.filled(40, 0);
   int animatingIndex = 0, chosen = 0;
   double previous = 0;
@@ -54,11 +54,14 @@ class _MyHomePageState extends State<MyHomePage>
 
   void setAnimationNumbers() {
     allNumbers.shuffle();
+    animatingIndex = 0;
     var other = min(20, allNumbers.length);
-    animationNumbers = allNumbers.take(1 + other).toList();
+    animationNumbers = [...allNumbers.take(other).toList()];
     chosen = animationNumbers.last;
+    print("other: $other");
+    print("list size: ${(other * 2)}");
     var list = List.generate(
-      other * 2,
+      other * 2 - 2,
       (index) => index + 1,
     )
         .map(
@@ -86,15 +89,20 @@ class _MyHomePageState extends State<MyHomePage>
         CurvedAnimation(parent: slideController, curve: Curves.easeInOut))
       ..addListener(() {
         setState(() {
-          if (slideAnimation.value.dy < previous && animatingIndex < 20) {
+          if (slideAnimation.value.dy < previous &&
+              animatingIndex < other - 1) {
             animatingIndex++;
+            red = !red;
           }
           previous = slideAnimation.value.dy;
+          print("animatingIndex: $animatingIndex");
         });
       })
       ..addStatusListener((status) {
         if (status == AnimationStatus.completed) {
+          print("allNumbers: $allNumbers");
           allNumbers.remove(chosen);
+          print("allNumbers: $allNumbers");
         }
       });
   }
@@ -105,8 +113,10 @@ class _MyHomePageState extends State<MyHomePage>
     var other = min(20, allNumbers.length);
     animationNumbers = [chosen, ...allNumbers.take(other).toList()];
     chosen = animationNumbers.last;
+    print("other: $other");
+    print("list size: ${(other * 2) * 2}");
     var list = List.generate(
-      other * 2,
+      other * 2 - 2,
       (index) => index + 1,
     )
         .map(
@@ -134,15 +144,20 @@ class _MyHomePageState extends State<MyHomePage>
         CurvedAnimation(parent: slideController, curve: Curves.easeInOut))
       ..addListener(() {
         setState(() {
-          if (slideAnimation.value.dy < previous && animatingIndex < 20) {
+          if (slideAnimation.value.dy < previous &&
+              animatingIndex < other - 1) {
             animatingIndex++;
+            red = !red;
           }
           previous = slideAnimation.value.dy;
+          print("animatingIndex: $animatingIndex");
         });
       })
       ..addStatusListener((status) {
         if (status == AnimationStatus.completed) {
+          print("allNumbers: $allNumbers");
           allNumbers.remove(chosen);
+          print("allNumbers: $allNumbers");
         }
       });
   }
@@ -171,8 +186,7 @@ class _MyHomePageState extends State<MyHomePage>
                         sigmaY: 10,
                       ),
                       child: Container(
-                        color:
-                            animatingIndex % 2 == 0 ? Colors.blue : Colors.red,
+                        color: red ? Colors.blue : Colors.red,
                         child: Center(
                           child: Text(
                             number,
@@ -187,7 +201,7 @@ class _MyHomePageState extends State<MyHomePage>
                       ),
                     )
                   : Container(
-                      color: Colors.blue,
+                      color: red ? Colors.blue : Colors.red,
                       child: Center(
                         child: Text(
                           number,
