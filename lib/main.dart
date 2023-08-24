@@ -39,7 +39,7 @@ class _MyHomePageState extends State<MyHomePage>
   late final AnimationController slideController;
   late Animation<Offset> slideAnimation;
   bool isAnimating = false, isInitial = true, red = true;
-  List<int> allNumbers = List.generate(20, (index) => index + 1),
+  List<int> allNumbers = List.generate(200, (index) => index + 1),
       animationNumbers = List.filled(40, 0);
   int animatingIndex = 0, chosen = 0;
   double previous = 0;
@@ -48,14 +48,14 @@ class _MyHomePageState extends State<MyHomePage>
   void initState() {
     super.initState();
     slideController =
-        AnimationController(vsync: this, duration: const Duration(seconds: 10));
+        AnimationController(vsync: this, duration: const Duration(seconds: 6));
     setAnimationNumbers();
   }
 
   void setAnimationNumbers() {
     allNumbers.shuffle();
     animatingIndex = 0;
-    var other = min(20, allNumbers.length);
+    var other = min(21, allNumbers.length);
     animationNumbers = [...allNumbers.take(other).toList()];
     chosen = animationNumbers.last;
     print("other: $other");
@@ -114,9 +114,9 @@ class _MyHomePageState extends State<MyHomePage>
     animationNumbers = [chosen, ...allNumbers.take(other).toList()];
     chosen = animationNumbers.last;
     print("other: $other");
-    print("list size: ${(other * 2) * 2}");
+    print("list size: ${other * 2}");
     var list = List.generate(
-      other * 2 - 2,
+      other * 2,
       (index) => index + 1,
     )
         .map(
@@ -144,8 +144,7 @@ class _MyHomePageState extends State<MyHomePage>
         CurvedAnimation(parent: slideController, curve: Curves.easeInOut))
       ..addListener(() {
         setState(() {
-          if (slideAnimation.value.dy < previous &&
-              animatingIndex < other - 1) {
+          if (slideAnimation.value.dy < previous && animatingIndex < other) {
             animatingIndex++;
             red = !red;
           }
