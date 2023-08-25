@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:flutter/services.dart' show rootBundle;
 import 'dart:math';
 import 'dart:ui';
 
@@ -10,7 +13,17 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
+  Future<Map<String, dynamic>> _readFile() async {
+    try {
+      final json = await rootBundle.loadString('file.json');
+      final data = jsonDecode(json);
+      return data;
+    } catch (e) {
+      print(e);
+      throw Exception('Failed to read file: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -20,15 +33,31 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
       ),
-      home: const MyHomePage(title: 'Bliss'),
+      home: FutureBuilder<Map<String, dynamic>>(
+          future: _readFile(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.done &&
+                !snapshot.hasError) {
+              return MyHomePage(
+                  title: 'Bliss',
+                  max: snapshot.data!['max']!,
+                  duration: snapshot.data!['duration']!);
+            }
+            return Scaffold(
+                body:
+                    Center(child: const CircularProgressIndicator.adaptive()));
+          }),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+  const MyHomePage(
+      {super.key, required this.title, required this.max, this.duration});
 
   final String title;
+  final int max;
+  final int? duration;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -39,16 +68,20 @@ class _MyHomePageState extends State<MyHomePage>
   late final AnimationController slideController;
   late Animation<Offset> slideAnimation;
   bool isAnimating = false, isInitial = true, red = true;
-  List<int> allNumbers = List.generate(200, (index) => index + 1),
-      animationNumbers = List.filled(40, 0);
+  List<int> allNumbers = [], animationNumbers = List.filled(40, 0);
   int animatingIndex = 0, chosen = 0;
   double previous = 0;
 
   @override
   void initState() {
     super.initState();
-    slideController =
-        AnimationController(vsync: this, duration: const Duration(seconds: 6));
+    slideController = AnimationController(
+        vsync: this, duration: Duration(seconds: widget.duration ?? 6));
+    setMax(widget.max);
+  }
+
+  void setMax(int max) {
+    allNumbers = List.generate(max, (index) => index + 1);
     setAnimationNumbers();
   }
 
@@ -58,8 +91,6 @@ class _MyHomePageState extends State<MyHomePage>
     var other = min(21, allNumbers.length);
     animationNumbers = [...allNumbers.take(other).toList()];
     chosen = animationNumbers.last;
-    print("other: $other");
-    print("list size: ${(other * 2)}");
     var list = List.generate(
       other * 2 - 2,
       (index) => index + 1,
@@ -95,14 +126,11 @@ class _MyHomePageState extends State<MyHomePage>
             red = !red;
           }
           previous = slideAnimation.value.dy;
-          print("animatingIndex: $animatingIndex");
         });
       })
       ..addStatusListener((status) {
         if (status == AnimationStatus.completed) {
-          print("allNumbers: $allNumbers");
           allNumbers.remove(chosen);
-          print("allNumbers: $allNumbers");
         }
       });
   }
@@ -113,8 +141,6 @@ class _MyHomePageState extends State<MyHomePage>
     var other = min(20, allNumbers.length);
     animationNumbers = [chosen, ...allNumbers.take(other).toList()];
     chosen = animationNumbers.last;
-    print("other: $other");
-    print("list size: ${other * 2}");
     var list = List.generate(
       other * 2,
       (index) => index + 1,
@@ -149,14 +175,11 @@ class _MyHomePageState extends State<MyHomePage>
             red = !red;
           }
           previous = slideAnimation.value.dy;
-          print("animatingIndex: $animatingIndex");
         });
       })
       ..addStatusListener((status) {
         if (status == AnimationStatus.completed) {
-          print("allNumbers: $allNumbers");
           allNumbers.remove(chosen);
-          print("allNumbers: $allNumbers");
         }
       });
   }
